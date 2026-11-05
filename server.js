@@ -1,11 +1,192 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
 const Parser = require('rss-parser');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+
+// Cơ sở dữ liệu tương thích 100% mọi hệ điều hành Cloud (Render Linux / Windows) không lo lỗi GLIBC_2.38
+function createJsonCloudDatabase(filePath) {
+    let state = {
+        seq: { users: 0, files: 0, custom_sources: 0 },
+        users: [],
+        files: [],
+        custom_sources: [],
+        disabled_sources: []
+    };
+
+    if (fs.existsSync(filePath)) {
+        try {
+            const loaded = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            state = { ...state, ...loaded, seq: { ...state.seq, ...(loaded.seq || {}) } };
+        } catch (_) {}
+    }
+
+    function save() {
+        try {
+            fs.writeFileSync(filePath, JSON.stringify(state, null, 2), 'utf8');
+        } catch (e) {
+            console.error('Lỗi lưu DB JSON:', e.message);
+        }
+    }
+
+    return {
+        serialize(fn) {
+            if (typeof fn === 'function') fn();
+        },
+        run(sql, params, cb) {
+            if (typeof params === 'function') {
+                cb = params;
+                params = [];
+            }
+            params = params || [];
+            const q = sql.replace(/\s+/g, ' ').trim();
+
+            if (/^CREATE TABLE/i.test(q)) {
+                if (cb) cb.call({ lastID: 0, changes: 0 }, null);
+                return;
+            }
+
+            if (/^INSERT INTO users/i.test(q)) {
+                const [username, password] = params;
+                if (state.users.some((u) => u.username.toLowerCase() === String(username).toLowerCase())) {
+                    if (cb) cb.call({}, new Error('UNIQUE constraint failed: users.username'));
+                    return;
+                }
+                const id = ++state.seq.users;
+                state.users.push({ id, username, password });
+                save();
+                if (cb) cb.call({ lastID: id, changes: 1 }, null);
+                return;
+            }
+
+            if (/^INSERT INTO files/i.test(q)) {
+                const [userId, originalName, filename, size, uploadDate] = params;
+                const id = ++state.seq.files;
+                state.files.push({
+                    id,
+                    userId: Number(userId),
+                    originalName,
+                    filename,
+                    size: Number(size),
+                    uploadDate
+                });
+                save();
+                if (cb) cb.call({ lastID: id, changes: 1 }, null);
+                return;
+            }
+
+            if (/^DELETE FROM files/i.test(q)) {
+                const [id, userId] = params;
+                const before = state.files.length;
+                state.files = state.files.filter(
+                    (f) => !(String(f.id) === String(id) && String(f.userId) === String(userId))
+                );
+                save();
+                if (cb) cb.call({ changes: before - state.files.length }, null);
+                return;
+            }
+
+            if (/^INSERT INTO custom_sources/i.test(q)) {
+                const [sourceId, name, siteUrl, rssUrl, mode, createdAt] = params;
+                const id = ++state.seq.custom_sources;
+                state.custom_sources.push({ id, sourceId, name, siteUrl, rssUrl, mode, createdAt });
+                save();
+                if (cb) cb.call({ lastID: id, changes: 1 }, null);
+                return;
+            }
+
+            if (/^DELETE FROM custom_sources/i.test(q)) {
+                const [idOrSid1, idOrSid2] = params;
+                const before = state.custom_sources.length;
+                state.custom_sources = state.custom_sources.filter(
+                    (s) => String(s.id) !== String(idOrSid1) && String(s.sourceId) !== String(idOrSid2)
+                );
+                save();
+                if (cb) cb.call({ changes: before - state.custom_sources.length }, null);
+                return;
+            }
+
+            if (/^INSERT OR IGNORE INTO disabled_sources/i.test(q)) {
+                const [sourceId] = params;
+                const lower = String(sourceId).toLowerCase();
+                if (!state.disabled_sources.includes(lower)) {
+                    state.disabled_sources.push(lower);
+                    save();
+                }
+                if (cb) cb.call({ changes: 1 }, null);
+                return;
+            }
+
+            if (/^DELETE FROM disabled_sources/i.test(q)) {
+                state.disabled_sources = [];
+                save();
+                if (cb) cb.call({ changes: 1 }, null);
+                return;
+            }
+
+            if (cb) cb.call({ lastID: 0, changes: 0 }, null);
+        },
+        get(sql, params, cb) {
+            if (typeof params === 'function') {
+                cb = params;
+                params = [];
+            }
+            params = params || [];
+            const q = sql.replace(/\s+/g, ' ').trim();
+
+            if (/FROM users WHERE username = \? AND password = \?/i.test(q)) {
+                const [username, password] = params;
+                const row = state.users.find((u) => u.username === username && u.password === password) || null;
+                if (cb) cb(null, row ? { id: row.id, username: row.username } : undefined);
+                return;
+            }
+
+            if (/FROM files WHERE id = \? AND userId = \?/i.test(q)) {
+                const [id, userId] = params;
+                const row =
+                    state.files.find((f) => String(f.id) === String(id) && String(f.userId) === String(userId)) ||
+                    undefined;
+                if (cb) cb(null, row);
+                return;
+            }
+
+            if (cb) cb(null, undefined);
+        },
+        all(sql, params, cb) {
+            if (typeof params === 'function') {
+                cb = params;
+                params = [];
+            }
+            params = params || [];
+            const q = sql.replace(/\s+/g, ' ').trim();
+
+            if (/FROM files WHERE userId = \?/i.test(q)) {
+                const [userId] = params;
+                const rows = state.files
+                    .filter((f) => String(f.userId) === String(userId))
+                    .sort((a, b) => b.id - a.id);
+                if (cb) cb(null, rows);
+                return;
+            }
+
+            if (/FROM custom_sources/i.test(q)) {
+                const rows = [...state.custom_sources].sort((a, b) => b.id - a.id);
+                if (cb) cb(null, rows);
+                return;
+            }
+
+            if (/FROM disabled_sources/i.test(q)) {
+                const rows = state.disabled_sources.map((s) => ({ sourceId: s }));
+                if (cb) cb(null, rows);
+                return;
+            }
+
+            if (cb) cb(null, []);
+        }
+    };
+}
 
 function getLocalIpAddress() {
     const interfaces = os.networkInterfaces();
@@ -48,14 +229,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 app.use('/uploads', express.static(uploadDir));
 
-// Khởi tạo SQLite Database
-const db = new sqlite3.Database(path.join(__dirname, 'thoisucuasang.db'), (err) => {
-    if (err) {
-        console.error('Lỗi kết nối SQLite:', err.message);
-    } else {
-        console.log('Đã kết nối SQLite Database thành công.');
+// Khởi tạo Database (Tự động dùng SQLite nếu tương thích, hoặc chuyển sang JSON Cloud DB trên Render Linux tránh lỗi GLIBC_2.38)
+let db;
+try {
+    if (process.env.RENDER || process.env.RENDER_EXTERNAL_URL) {
+        throw new Error('Sử dụng Cloud JSON Database trên Render Linux');
     }
-});
+    const sqlite3 = require('sqlite3').verbose();
+    db = new sqlite3.Database(path.join(__dirname, 'thoisucuasang.db'), (err) => {
+        if (err) {
+            console.error('Lỗi kết nối SQLite:', err.message);
+        } else {
+            console.log('Đã kết nối SQLite Database thành công.');
+        }
+    });
+} catch (err) {
+    console.log('☁️ Đã kích hoạt Cloud JSON Database (Tương thích 100% Render Linux): thoisucuasang-data.json');
+    db = createJsonCloudDatabase(path.join(__dirname, 'thoisucuasang-data.json'));
+}
 
 db.serialize(() => {
     // Bảng users

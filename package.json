@@ -1,0 +1,21 @@
+{
+  "name": "thoi-su-cua-sang",
+  "version": "3.5.0",
+  "description": "Ứng dụng đọc tin tức 6 báo lớn, thời tiết trực tuyến và lưu trữ đám mây cá nhân",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "multer": "^2.5.0",
+    "rss-parser": "^3.13.0",
+    "sqlite3": "^6.0.1"
+  }
+}

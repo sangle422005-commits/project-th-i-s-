@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Thời Sự Sang" />
+    <title>Thời Sự Của Sang — 6 Trang Báo Lớn, Thời Tiết & Đám Mây</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="app-icon.svg" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- Overlay cho Mobile Sidebar -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- Layout Chính -->
+    <div class="app-layout">
+        <!-- Sidebar Navigation (Thanh công cụ chính) -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">📰</div>
+                <div class="brand-info">
+                    <h1 class="brand-title">Thời Sự Của Sang</h1>
+                    <span class="brand-subtitle">6 Báo Lớn • Cloud v3.0</span>
+                </div>
+                <button id="closeSidebarBtn" class="icon-btn mobile-only" aria-label="Đóng menu">✕</button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-group-label">CHUYÊN MỤC THIẾT YẾU</div>
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Tổng quan Dashboard</span>
+                </a>
+                <a href="#weatherSection" class="nav-item" data-section="weatherSection">
+                    <span class="nav-icon">🌤️</span>
+                    <span>Thời tiết trực tuyến</span>
+                </a>
+                <a href="#newsSection" class="nav-item" data-cat-jump="thoi-su">
+                    <span class="nav-icon">🔥</span>
+                    <span>Thời sự trong ngày</span>
+                </a>
+                <a href="#newsSection" class="nav-item" data-cat-jump="tai-chinh">
+                    <span class="nav-icon">💰</span>
+                    <span>Tài chính & Chứng khoán</span>
+                </a>
+                <a href="#newsSection" class="nav-item" data-cat-jump="chinh-tri">
+                    <span class="nav-icon">🌐</span>
+                    <span>Tình hình Chính trị</span>
+                </a>
+                <a href="#newsSection" class="nav-item" data-cat-jump="thoi-tiet">
+                    <span class="nav-icon">⛈️</span>
+                    <span>Tin Thời tiết & Khí hậu</span>
+                </a>
+
+                <div class="nav-group-label" id="sidebarSourcesHeader">NGUỒN BÁO ĐIỆN TỬ</div>
+                <a href="#newsSection" class="nav-item" data-source-jump="all" id="sidebarAllSourcesLink">
+                    <span class="nav-icon">🗞️</span>
+                    <span id="sidebarAllSourcesText">Tất cả trang báo</span>
+                </a>
+                <!-- Danh sách tất cả các trang báo đang theo dõi (có nút Xóa từng báo) -->
+                <div id="sidebarSourcesList"></div>
+
+                <div class="nav-group-label">ĐÁM MÂY & ỨNG DỤNG</div>
+                <a href="#uploadSection" class="nav-item" data-section="uploadSection">
+                    <span class="nav-icon">☁️</span>
+                    <span>Tải tài liệu lên</span>
+                </a>
+                <a href="#filesSection" class="nav-item" data-section="filesSection">
+                    <span class="nav-icon">📁</span>
+                    <span>Kho file của tôi</span>
+                </a>
+                <a href="#installApp" id="sidebarInstallAppBtn" class="nav-item nav-item-install">
+                    <span class="nav-icon">📲</span>
+                    <span>Tải App Điện Thoại</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar" id="userAvatar">S</div>
+                    <div class="user-details">
+                        <p class="user-name" id="sidebarUsername">Khách</p>
+                        <span class="user-status" id="sidebarUserStatus">Chưa đăng nhập</span>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="btn btn-outline-danger full-width">
+                    <span>🚪</span> Đăng xuất / Đổi TK
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content (Dashboard) -->
+        <main class="main-content" id="dashboard">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button id="menuToggleBtn" class="icon-btn mobile-only" aria-label="Mở menu">☰</button>
+                    <div>
+                        <h2 class="page-heading" id="topbarTitle">📊 Tổng quan Dashboard</h2>
+                        <p class="page-subheading" id="topbarSubtitle">Thống kê nhanh hệ thống Thời Sự Của Sang</p>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <span class="live-badge"><span class="pulse-dot"></span> LIVE SYSTEM</span>
+                    <button id="openInstallAppBtn" class="btn btn-install-app btn-sm">📲 Tải App Điện Thoại</button>
+                    <button id="openAuthBtn" class="btn btn-primary btn-sm">Tài khoản</button>
+                </div>
+            </header>
+
+            <!-- VIEW 1: TỔNG QUAN DASHBOARD (Chỉ hiện khi chọn Tổng quan Dashboard) -->
+            <div id="overviewSection" class="view-panel">
+                <section class="stats-grid">
+                    <div class="stat-card" onclick="switchView('files')" style="cursor: pointer" title="Nhấn để mở Kho file của tôi">
+                        <div class="stat-icon stat-icon-blue">📄</div>
+                        <div class="stat-body">
+                            <span class="stat-label">Tổng số file đã tải lên</span>
+                            <h3 class="stat-value" id="totalFilesCount">0 file</h3>
+                            <span class="stat-hint">Nhấn để xem Kho file cá nhân →</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" onclick="switchView('upload')" style="cursor: pointer" title="Nhấn để tải thêm tài liệu">
+                        <div class="stat-icon stat-icon-purple">💾</div>
+                        <div class="stat-body">
+                            <span class="stat-label">Tổng dung lượng sử dụng</span>
+                            <h3 class="stat-value" id="totalStorageSize">0 KB</h3>
+                            <div class="storage-bar">
+                                <div class="storage-progress" id="storageProgressBar" style="width: 0%"></div>
+                            </div>
+                            <span class="stat-hint" id="storageQuotaHint">0% trên hạn mức 100 MB</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" onclick="switchView('news')" style="cursor: pointer" title="Nhấn để đọc tin tức">
+                        <div class="stat-icon stat-icon-amber">⚡</div>
+                        <div class="stat-body">
+                            <span class="stat-label">Bộ lọc tin tức hiện tại</span>
+                            <h3 class="stat-value" id="newsCountStat">Thời sự</h3>
+                            <span class="stat-hint" id="newsSourceHint">Nhấn để mở trang Đọc báo →</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Lối tắt nhanh trên màn hình Tổng quan -->
+                <section class="card quick-nav-card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">🧭 Chọn nhanh tính năng làm việc</h3>
+                            <p class="card-desc">Nhấn vào tính năng bên dưới hoặc chọn từ thanh công cụ bên trái màn hình</p>
+                        </div>
+                    </div>
+                    <div class="quick-nav-grid">
+                        <button type="button" class="quick-tile" onclick="switchView('news')">
+                            <span class="quick-tile-icon">📰</span>
+                            <div class="quick-tile-text">
+                                <strong>Đọc Báo & Điểm Tin</strong>
+                                <span>Thời sự, Tài chính, Chính trị từ các báo lớn</span>
+                            </div>
+                        </button>
+                        <button type="button" class="quick-tile" onclick="switchView('weather')">
+                            <span class="quick-tile-icon">🌤️</span>
+                            <div class="quick-tile-text">
+                                <strong>Thời Tiết Trực Tuyến</strong>
+                                <span>Nhiệt độ, độ ẩm, sức gió 5 thành phố lớn</span>
+                            </div>
+                        </button>
+                        <button type="button" class="quick-tile" onclick="switchView('upload')">
+                            <span class="quick-tile-icon">☁️</span>
+                            <div class="quick-tile-text">
+                                <strong>Tải Tài Liệu Lên</strong>
+                                <span>Kéo & thả file lưu trữ lên đám mây cá nhân</span>
+                            </div>
+                        </button>
+                        <button type="button" class="quick-tile" onclick="switchView('files')">
+                            <span class="quick-tile-icon">📁</span>
+                            <div class="quick-tile-text">
+                                <strong>Kho File Của Tôi</strong>
+                                <span>Quản lý, tải xuống hoặc xóa tài liệu đã lưu</span>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW 2: THỜI TIẾT TRỰC TUYẾN (Chỉ hiện khi chọn Thời tiết trực tuyến) -->
+            <section id="weatherSection" class="card weather-section-card view-panel hidden">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">🌤️ Thời tiết thiết yếu trực tuyến (Việt Nam)</h3>
+                        <p class="card-desc">Cập nhật nhiệt độ, độ ẩm, sức gió thời gian thực từ trạm khí tượng Open-Meteo</p>
+                    </div>
+                    <button id="refreshWeatherBtn" class="btn btn-ghost btn-sm">🔄 Cập nhật thời tiết</button>
+                </div>
+
+                <div id="weatherGrid" class="weather-grid">
+                    <div class="skeleton-loader">Đang tải dữ liệu thời tiết các tỉnh thành...</div>
+                </div>
+            </section>
+
+            <!-- VIEW 3: ĐIỂM TIN & BÁO CHÍ (Chỉ hiện khi chọn Chuyên mục tin tức hoặc Nguồn báo) -->
+            <section id="newsSection" class="card news-card view-panel hidden">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">📰 Điểm tin Thiết yếu — Thời Sự Của Sang</h3>
+                        <p class="card-desc">Chọn chuyên mục hoặc lọc riêng từng tờ báo trên thanh công cụ bên dưới</p>
+                    </div>
+                    <div class="card-header-actions">
+                        <button type="button" id="toggleAutoApiBtn" class="btn btn-outline-primary btn-sm">
+                            ➕ Thêm báo mới bằng URL
+                        </button>
+                        <button id="refreshNewsBtn" class="btn btn-ghost btn-sm" title="Làm mới tin tức">🔄 Làm mới</button>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ 1: Bộ lọc Chuyên mục Tin tức -->
+                <div class="news-category-tabs" id="newsCategoryTabs">
+                    <button type="button" class="cat-tab active" data-category="thoi-su">
+                        🔥 Thời sự
+                    </button>
+                    <button type="button" class="cat-tab" data-category="tai-chinh">
+                        💰 Tài chính - Kinh tế
+                    </button>
+                    <button type="button" class="cat-tab" data-category="chinh-tri">
+                        🌐 Chính trị - Thế giới
+                    </button>
+                    <button type="button" class="cat-tab" data-category="thoi-tiet">
+                        ⛈️ Tin Thời tiết
+                    </button>
+                    <button type="button" class="cat-tab" data-category="all">
+                        ✨ Tổng hợp
+                    </button>
+                </div>
+
+                <!-- Thanh công cụ 2: Bộ lọc Trang Báo (có nút Xóa ✕ cho từng báo & nút Khôi phục) -->
+                <div class="news-source-bar" id="newsSourceTabs">
+                    <span class="source-bar-label">Trang báo:</span>
+                    <button type="button" class="source-pill active" data-source="all" id="allSourcesPill">Tất cả</button>
+                    <span id="dynamicSourcePillsContainer" class="custom-pills-wrap"></span>
+                    <button type="button" id="restoreDefaultSourcesBtn" class="btn-restore-sources hidden" onclick="restoreDefaultSources()">
+                        🔄 Khôi phục 6 báo gốc
+                    </button>
+                </div>
+
+                <!-- Thanh công cụ 3: Tự động lấy API / RSS khi điền địa chỉ trang báo (Ẩn/Hiện gọn gàng) -->
+                <div id="autoApiBox" class="auto-api-box hidden">
+                    <div class="auto-api-header">
+                        <span class="auto-api-title">🔗 Tự động lấy API / RSS từ địa chỉ trang báo bất kỳ</span>
+                        <div class="quick-domain-chips">
+                            <span>Thử nhanh:</span>
+                            <button type="button" class="chip-btn" data-url="https://laodong.vn" data-name="Báo Lao Động">+ Lao Động</button>
+                            <button type="button" class="chip-btn" data-url="https://vtv.vn" data-name="VTV News">+ VTV.vn</button>
+                            <button type="button" class="chip-btn" data-url="https://tienphong.vn" data-name="Báo Tiền Phong">+ Tiền Phong</button>
+                            <button type="button" class="chip-btn" data-url="https://nld.com.vn" data-name="Người Lao Động">+ Người Lao Động</button>
+                        </div>
+                    </div>
+                    <form id="addSourceForm" class="auto-api-form">
+                        <input
+                            type="text"
+                            id="customSourceUrlInput"
+                            placeholder="Điền địa chỉ trang báo (VD: https://laodong.vn hoặc link RSS)..."
+                            required
+                        />
+                        <input
+                            type="text"
+                            id="customSourceNameInput"
+                            class="input-short-name"
+                            placeholder="Tên báo (tự động nếu để trống)"
+                        />
+                        <button type="submit" id="addSourceSubmitBtn" class="btn btn-primary btn-sm">
+                            ⚡ Tự lấy API & Thêm
+                        </button>
+                    </form>
+                    <div id="discoveredApiBanner" class="discovered-banner hidden"></div>
+                </div>
+
+                <div id="newsList" class="news-list">
+                    <div class="skeleton-loader">Đang tải bản tin mới nhất...</div>
+                </div>
+            </section>
+
+            <!-- VIEW 4: TẢI TÀI LIỆU LÊN (Chỉ hiện khi chọn Tải tài liệu lên) -->
+            <section id="uploadSection" class="card upload-card view-panel hidden">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">☁️ Tải tài liệu lên đám mây</h3>
+                        <p class="card-desc">Hỗ trợ mọi định dạng (PDF, Word, Ảnh, ZIP, Video - tối đa 50MB/file)</p>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="switchView('files')">📁 Xem Kho file của tôi →</button>
+                </div>
+
+                <div id="dropZone" class="drop-zone">
+                    <input type="file" id="fileInput" hidden multiple />
+                    <div class="drop-zone-content">
+                        <div class="drop-icon">📤</div>
+                        <h4>Kéo & Thả file vào đây</h4>
+                        <p>hoặc <span class="browse-link">nhấn để chọn file</span> từ thiết bị của bạn</p>
+                        <span class="drop-badge">Viền nhấp nháy thông minh • Tự động đồng bộ SQLite</span>
+                    </div>
+                </div>
+
+                <div id="uploadStatusBox" class="upload-status hidden">
+                    <span class="spinner"></span>
+                    <span id="uploadStatusText">Đang tải file lên máy chủ...</span>
+                </div>
+            </section>
+
+            <!-- VIEW 5: KHO FILE CỦA TÔI (Chỉ hiện khi chọn Kho file của tôi) -->
+            <section id="filesSection" class="card files-card view-panel hidden">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">📁 File gần đây</h3>
+                        <p class="card-desc">Danh sách tài liệu cá nhân gắn với tài khoản của bạn</p>
+                    </div>
+                    <button id="refreshFilesBtn" class="btn btn-ghost btn-sm">🔄 Tải lại danh sách</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="files-table">
+                        <thead>
+                            <tr>
+                                <th>Tên tài liệu</th>
+                                <th>Định dạng</th>
+                                <th>Dung lượng</th>
+                                <th>Ngày tải lên</th>
+                                <th class="text-right">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filesTableBody">
+                            <tr>
+                                <td colspan="5" class="empty-state">Chưa có tài liệu nào. Hãy kéo thả file để bắt đầu!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal (Popup) Đăng nhập / Đăng ký -->
+    <div id="authModal" class="modal-backdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-logo">📰</div>
+                <h2>Chào mừng đến với Thời Sự Của Sang</h2>
+                <p>Đăng nhập hoặc tạo tài khoản để quản lý kho tài liệu cá nhân</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab active" data-mode="login">Đăng nhập</button>
+                <button type="button" class="auth-tab" data-mode="register">Đăng ký mới</button>
+            </div>
+
+            <form id="authForm" class="auth-form">
+                <div class="form-group">
+                    <label for="usernameInput">Tên đăng nhập</label>
+                    <input
+                        type="text"
+                        id="usernameInput"
+                        placeholder="Nhập username (vd: sangtest)..."
+                        required
+                        autocomplete="username"
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="passwordInput">Mật khẩu</label>
+                    <input
+                        type="password"
+                        id="passwordInput"
+                        placeholder="Nhập mật khẩu..."
+                        required
+                        autocomplete="current-password"
+                    />
+                </div>
+                <button type="submit" id="authSubmitBtn" class="btn btn-primary full-width">
+                    Đăng nhập ngay
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal (Popup) Tải & Cài Đặt App Trên Điện Thoại -->
+    <div id="installAppModal" class="modal-backdrop hidden">
+        <div class="modal-box modal-box-wide">
+            <div class="modal-close-row">
+                <span class="pwa-badge">✨ PWA Mobile App v3.0</span>
+                <button type="button" id="closeInstallModalBtn" class="icon-btn" aria-label="Đóng">✕</button>
+            </div>
+
+            <div class="modal-header">
+                <div class="modal-logo">📲</div>
+                <h2>Tải App "Thời Sự Của Sang"</h2>
+                <p>Cài đặt trực tiếp lên màn hình chính Điện thoại (Android & iOS) hoặc Máy tính</p>
+            </div>
+
+            <!-- Nút Cài Đặt Nhanh 1 Chạm (PWA / Mở Chrome từ Zalo) -->
+            <div class="pwa-direct-install">
+                <button type="button" id="triggerPwaInstallBtn" class="btn btn-install-app full-width">
+                    ⚡ Cài đặt App trực tiếp ngay trên thiết bị này
+                </button>
+                <a id="openInChromeIntentBtn" href="#" class="btn btn-primary full-width hidden" style="margin-top: 8px; text-decoration: none;">
+                    🚀 Mở sang trình duyệt Chrome để cài App
+                </a>
+                <p class="pwa-install-hint" id="pwaInstallHint">
+                    Chạy mượt như App gốc • Biểu tượng riêng ngoài màn hình chính • Toàn màn hình
+                </p>
+            </div>
+
+            <!-- Hộp chỉ dẫn trực quan chỉ thẳng lên nút 3 chấm ⋮ góc phải trên điện thoại -->
+            <div id="mobileStepBanner" class="mobile-step-banner hidden"></div>
+
+            <!-- Khu vực Quét Mã QR kết nối Điện thoại qua Wi-Fi -->
+            <div class="qr-connect-box">
+                <div class="qr-image-wrap">
+                    <img
+                        id="mobileQrImage"
+                        src=""
+                        alt="Mã QR tải App Thời Sự Của Sang"
+                        class="qr-image"
+                    />
+                </div>
+                <div class="qr-info">
+                    <h4>📷 Quét mã QR bằng Điện thoại (cùng mạng Wi-Fi)</h4>
+                    <p>Mở Camera hoặc Zalo trên điện thoại, quét mã bên cạnh để mở ngay ứng dụng:</p>
+                    <div class="lan-url-box">
+                        <code id="mobileLanUrlText">http://localhost:3000</code>
+                        <button type="button" id="copyLanUrlBtn" class="btn btn-ghost btn-sm">📋 Copy</button>
+                    </div>
+                    <span class="qr-note">💡 Lưu ý: Điện thoại và máy tính cần kết nối chung một mạng Wi-Fi.</span>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn cài đặt lên Màn hình chính cho Android & iPhone -->
+            <div class="mobile-guide-grid">
+                <div class="guide-card">
+                    <h5>🤖 Trên điện thoại Android (Chrome)</h5>
+                    <ol>
+                        <li>Quét mã QR hoặc mở đường dẫn trên trình duyệt <strong>Chrome</strong>.</li>
+                        <li>Nhấn nút <strong>"⚡ Cài đặt App trực tiếp"</strong> hoặc chạm biểu tượng <strong>⋮ (3 chấm)</strong> ở góc trên phải.</li>
+                        <li>Chọn <strong>"Cài đặt ứng dụng" (Install App)</strong> hoặc <strong>"Thêm vào màn hình chính"</strong>.</li>
+                    </ol>
+                </div>
+                <div class="guide-card">
+                    <h5>🍎 Trên iPhone / iPad (Safari)</h5>
+                    <ol>
+                        <li>Quét mã QR bằng Camera để mở trang web trong trình duyệt <strong>Safari</strong>.</li>
+                        <li>Nhấn vào nút <strong>Chia sẻ (Share ⬆️)</strong> ở thanh công cụ phía dưới màn hình.</li>
+                        <li>Cuộn xuống chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong> rồi nhấn <strong>Thêm</strong>.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- JavaScript tích hợp -->
+    <script>
+        const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+        const MAX_STORAGE_BYTES = 100 * 1024 * 1024; // Hạn mức hiển thị 100MB
+
+        let authMode = 'login';
+        let currentNewsCategory = 'thoi-su';
+        let currentNewsSource = 'all';
+
+        const CATEGORY_LABELS = {
+            'all': 'Tổng hợp',
+            'thoi-su': 'Thời sự',
+            'tai-chinh': 'Tài chính',
+            'chinh-tri': 'Chính trị',
+            'thoi-tiet': 'Tin Thời tiết'
+        };
+
+        const SOURCE_LABELS = {
+            'all': 'Tất cả 6 báo',
+            'vnexpress': 'VNExpress',
+            'tuoitre': 'Tuổi Trẻ',
+            'thanhnien': 'Thanh Niên',
+            'dantri': 'Dân Trí',
+            'vietnamnet': 'VietNamNet',
+            'cafef': 'CafeF'
+        };
+
+        // DOM Elements
+        const authModal = document.getElementById('authModal');
+        const authForm = document.getElementById('authForm');
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const authSubmitBtn = document.getElementById('authSubmitBtn');
+        const usernameInput = document.getElementById('usernameInput');
+        const passwordInput = document.getElementById('passwordInput');
+
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const menuToggleBtn = document.getElementById('menuToggleBtn');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const sidebarUsername = document.getElementById('sidebarUsername');
+        const sidebarUserStatus = document.getElementById('sidebarUserStatus');
+        const userAvatar = document.getElementById('userAvatar');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const openAuthBtn = document.getElementById('openAuthBtn');
+
+        const totalFilesCount = document.getElementById('totalFilesCount');
+        const totalStorageSize = document.getElementById('totalStorageSize');
+        const storageProgressBar = document.getElementById('storageProgressBar');
+        const storageQuotaHint = document.getElementById('storageQuotaHint');
+        const newsCountStat = document.getElementById('newsCountStat');
+        const newsSourceHint = document.getElementById('newsSourceHint');
+
+        const weatherGrid = document.getElementById('weatherGrid');
+        const refreshWeatherBtn = document.getElementById('refreshWeatherBtn');
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadStatusBox = document.getElementById('uploadStatusBox');
+        const uploadStatusText = document.getElementById('uploadStatusText');
+
+        const filesTableBody = document.getElementById('filesTableBody');
+        const refreshFilesBtn = document.getElementById('refreshFilesBtn');
+        const newsList = document.getElementById('newsList');
+        const refreshNewsBtn = document.getElementById('refreshNewsBtn');
+        const catTabs = document.querySelectorAll('.cat-tab');
+        const sourcePills = document.querySelectorAll('.source-pill');
+        const toastContainer = document.getElementById('toastContainer');
+
+        // ==================== TIỆN ÍCH ====================
+
+        function getAuthUser() {
+            const userId = localStorage.getItem('userId');
+            const username = localStorage.getItem('username');
+            return userId && username ? { userId, username } : null;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+            toast.innerHTML = `
+                <span class="toast-icon">${icon}</span>
+                <span class="toast-msg">${escapeHtml(message)}</span>
+            `;
+            toastContainer.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 350);
+            }, 3500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Vừa xong';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function getFileIconAndType(filename) {
+            const ext = (filename.split('.').pop() || '').toLowerCase();
+            const map = {
+                pdf: { icon: '📕', label: 'PDF' },
+                doc: { icon: '📘', label: 'Word' },
+                docx: { icon: '📘', label: 'Word' },
+                xls: { icon: '📗', label: 'Excel' },
+                xlsx: { icon: '📗', label: 'Excel' },
+                ppt: { icon: '📙', label: 'Slide' },
+                pptx: { icon: '📙', label: 'Slide' },
+                png: { icon: '🖼️', label: 'Hình ảnh' },
+                jpg: { icon: '🖼️', label: 'Hình ảnh' },
+                jpeg: { icon: '🖼️', label: 'Hình ảnh' },
+                gif: { icon: '🖼️', label: 'Hình ảnh' },
+                webp: { icon: '🖼️', label: 'Hình ảnh' },
+                svg: { icon: '🎨', label: 'Vector' },
+                zip: { icon: '🗜️', label: 'Nén ZIP' },
+                rar: { icon: '🗜️', label: 'Nén RAR' },
+                mp4: { icon: '🎬', label: 'Video' },
+                mp3: { icon: '🎵', label: 'Âm thanh' },
+                txt: { icon: '📝', label: 'Văn bản' },
+                js: { icon: '💻', label: 'Code JS' },
+                html: { icon: '🌐', label: 'HTML' },
+                css: { icon: '🎨', label: 'CSS' },
+                json: { icon: '⚙️', label: 'JSON' }
+            };
+            return map[ext] || { icon: '📄', label: ext ? ext.toUpperCase() : 'FILE' };
+        }
+
+        // ==================== QUẢN LÝ AUTH ====================
+
+        function updateAuthUI() {
+            const user = getAuthUser();
+            if (user) {
+                authModal.classList.add('hidden');
+                sidebarUsername.textContent = user.username;
+                sidebarUserStatus.textContent = `ID: #${user.userId} • Đã xác thực`;
+                userAvatar.textContent = user.username.charAt(0).toUpperCase();
+                openAuthBtn.textContent = `👤 ${user.username}`;
+                fetchFiles();
+            } else {
+                authModal.classList.remove('hidden');
+                sidebarUsername.textContent = 'Khách';
+                sidebarUserStatus.textContent = 'Chưa đăng nhập';
+                userAvatar.textContent = '?';
+                openAuthBtn.textContent = 'Đăng nhập';
+                filesTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-state">Vui lòng đăng nhập để xem và quản lý tài liệu của bạn.</td>
+                    </tr>
+                `;
+                updateStats([]);
+            }
+        }
+
+        authTabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                authTabs.forEach((t) => t.classList.remove('active'));
+                tab.classList.add('active');
+                authMode = tab.dataset.mode;
+                authSubmitBtn.textContent = authMode === 'login' ? 'Đăng nhập ngay' : 'Tạo tài khoản mới';
+            });
+        });
+
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!username || !password) {
+                showToast('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!', 'error');
+                return;
+            }
+
+            const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+            authSubmitBtn.disabled = true;
+            authSubmitBtn.textContent = 'Đang xử lý...';
+
+            try {
+                const res = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'Xác thực thất bại');
+                }
+
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('username', data.username);
+
+                showToast(data.message || 'Xác thực thành công!', 'success');
+                authForm.reset();
+                updateAuthUI();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                authSubmitBtn.disabled = false;
+                authSubmitBtn.textContent = authMode === 'login' ? 'Đăng nhập ngay' : 'Tạo tài khoản mới';
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            showToast('Đã đăng xuất khỏi hệ thống.', 'info');
+            updateAuthUI();
+        });
+
+        openAuthBtn.addEventListener('click', () => {
+            const user = getAuthUser();
+            if (!user) {
+                authModal.classList.remove('hidden');
+            } else {
+                showToast(`Đang đăng nhập với tài khoản: ${user.username}`, 'info');
+            }
+        });
+
+        // ==================== THỜI TIẾT TRỰC TUYẾN (/api/weather) ====================
+
+        async function fetchWeather() {
+            weatherGrid.innerHTML = `<div class="skeleton-loader">⏳ Đang cập nhật thời tiết 5 thành phố lớn...</div>`;
+            try {
+                const res = await fetch(`${API_BASE}/api/weather`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Không thể tải dữ liệu thời tiết');
+
+                const cities = data.cities || [];
+                weatherGrid.innerHTML = cities
+                    .map(
+                        (c) => `
+                        <div class="weather-card">
+                            <div class="weather-top">
+                                <div>
+                                    <span class="weather-region">${escapeHtml(c.region)}</span>
+                                    <h4 class="weather-city">${escapeHtml(c.name)}</h4>
+                                </div>
+                                <span class="weather-icon">${c.icon}</span>
+                            </div>
+                            <div class="weather-temp-row">
+                                <span class="weather-temp">${c.temp}°C</span>
+                                <span class="weather-desc">${escapeHtml(c.description)}</span>
+                            </div>
+                            <div class="weather-details">
+                                <span>🌡️ Cao/Thấp: <strong>${c.maxTemp}° / ${c.minTemp}°</strong></span>
+                                <span>💧 Độ ẩm: <strong>${c.humidity}%</strong></span>
+                                <span>💨 Gió: <strong>${c.windSpeed} km/h</strong></span>
+                            </div>
+                        </div>
+                    `
+                    )
+                    .join('');
+            } catch (err) {
+                weatherGrid.innerHTML = `
+                    <div class="empty-state error-text">
+                        ⚠️ Không thể tải thời tiết (${escapeHtml(err.message)}).
+                    </div>
+                `;
+            }
+        }
+
+        refreshWeatherBtn.addEventListener('click', () => {
+            fetchWeather();
+            showToast('Đã cập nhật dữ liệu thời tiết mới nhất!', 'info');
+        });
+
+        // ==================== TIN TỨC 6 TRANG BÁO & ĐA CHUYÊN MỤC (/api/news) ====================
+
+        function syncNewsFilterButtons() {
+            catTabs.forEach((b) => {
+                b.classList.toggle('active', b.dataset.category === currentNewsCategory);
+            });
+            document.querySelectorAll('.source-pill').forEach((p) => {
+                p.classList.toggle('active', p.dataset.source === currentNewsSource);
+            });
+        }
+
+        async function fetchNews(category = currentNewsCategory, source = currentNewsSource) {
+            currentNewsCategory = category;
+            currentNewsSource = source;
+            syncNewsFilterButtons();
+
+            const catLabel = CATEGORY_LABELS[category] || 'Thời sự';
+            const srcLabel = SOURCE_LABELS[source] || 'Tất cả 6 báo';
+            newsList.innerHTML = `<div class="skeleton-loader">⏳ Đang tải bản tin <strong>${escapeHtml(catLabel)}</strong> từ <strong>${escapeHtml(srcLabel)}</strong>...</div>`;
+
+            try {
+                const url = `${API_BASE}/api/news?category=${encodeURIComponent(category)}&source=${encodeURIComponent(source)}&limit=8`;
+                const res = await fetch(url);
+                const items = await res.json();
+                if (!res.ok) throw new Error(items.error || 'Không thể tải tin tức RSS');
+
+                newsCountStat.textContent = `${items.length} tin ${catLabel}`;
+                newsSourceHint.textContent = `Nguồn: ${srcLabel}`;
+
+                if (!items || items.length === 0) {
+                    newsList.innerHTML = `<div class="empty-state">Hiện chưa có bản tin phù hợp trong bộ lọc này. Hãy thử chọn "Tất cả (6 báo)" hoặc chuyên mục khác!</div>`;
+                    return;
+                }
+
+                newsList.innerHTML = items
+                    .map(
+                        (news, idx) => `
+                        <article class="news-item">
+                            <div class="news-rank">${idx + 1}</div>
+                            <div class="news-content">
+                                <div class="news-badges">
+                                    <span class="badge-source badge-src-${escapeHtml(news.sourceId || 'vnexpress')}">
+                                        ${escapeHtml(news.source || 'VNExpress')}
+                                    </span>
+                                    <span class="badge-category">${escapeHtml(news.category || catLabel)}</span>
+                                </div>
+                                <a href="${escapeHtml(news.link)}" target="_blank" rel="noopener noreferrer" class="news-title">
+                                    ${escapeHtml(news.title)}
+                                </a>
+                                <p class="news-snippet">${escapeHtml(news.snippet || '')}</p>
+                                <span class="news-meta">🕒 ${escapeHtml(formatDate(news.pubDate))}</span>
+                            </div>
+                        </article>
+                    `
+                    )
+                    .join('');
+            } catch (err) {
+                newsList.innerHTML = `
+                    <div class="empty-state error-text">
+                        ⚠️ Không thể tải RSS (${escapeHtml(err.message)}). Hãy kiểm tra kết nối mạng hoặc nhấn Làm mới.
+                    </div>
+                `;
+            }
+        }
+
+        catTabs.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                fetchNews(btn.dataset.category, currentNewsSource);
+            });
+        });
+
+        sourcePills.forEach((pill) => {
+            pill.addEventListener('click', () => {
+                fetchNews(currentNewsCategory, pill.dataset.source);
+            });
+        });
+
+        refreshNewsBtn.addEventListener('click', () => {
+            fetchNews(currentNewsCategory, currentNewsSource);
+            showToast(`Đang cập nhật ${CATEGORY_LABELS[currentNewsCategory]} (${SOURCE_LABELS[currentNewsSource]})...`, 'info');
+        });
+
+        // ==================== QUẢN LÝ FILE (GET / UPLOAD / DELETE) ====================
+
+        async function fetchFiles() {
+            const user = getAuthUser();
+            if (!user) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/files`, {
+                    method: 'GET',
+                    headers: {
+                        'x-user-id': user.userId
+                    }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Không thể tải danh sách file.');
+
+                renderFilesTable(data);
+                updateStats(data);
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function updateStats(files) {
+            const count = files.length;
+            const totalBytes = files.reduce((sum, f) => sum + (Number(f.size) || 0), 0);
+            const percent = Math.min(100, ((totalBytes / MAX_STORAGE_BYTES) * 100).toFixed(1));
+
+            totalFilesCount.textContent = `${count} file`;
+            totalStorageSize.textContent = formatBytes(totalBytes);
+            storageProgressBar.style.width = `${percent}%`;
+            storageQuotaHint.textContent = `${percent}% trên hạn mức 100 MB`;
+        }
+
+        function renderFilesTable(files) {
+            if (!files || files.length === 0) {
+                filesTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            Chưa có file nào được tải lên. Hãy kéo & thả file vào khung phía trên!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filesTableBody.innerHTML = files
+                .map((file) => {
+                    const { icon, label } = getFileIconAndType(file.originalName);
+                    const downloadUrl = `${API_BASE}/uploads/${encodeURIComponent(file.filename)}`;
+                    return `
+                        <tr>
+                            <td>
+                                <div class="file-cell">
+                                    <span class="file-icon">${icon}</span>
+                                    <div class="file-meta">
+                                        <a href="${downloadUrl}" target="_blank" rel="noopener" class="file-name-link" title="${escapeHtml(file.originalName)}">
+                                            ${escapeHtml(file.originalName)}
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge-format">${escapeHtml(label)}</span></td>
+                            <td>${formatBytes(file.size)}</td>
+                            <td>${formatDate(file.uploadDate)}</td>
+                            <td class="text-right">
+                                <button class="btn btn-danger-soft btn-sm" onclick="deleteFile(${file.id})">
+                                    🗑️ Xóa
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                })
+                .join('');
+        }
+
+        async function uploadFiles(fileList) {
+            const user = getAuthUser();
+            if (!user) {
+                showToast('Vui lòng đăng nhập trước khi tải file lên!', 'error');
+                authModal.classList.remove('hidden');
+                return;
+            }
+
+            if (!fileList || fileList.length === 0) return;
+
+            uploadStatusBox.classList.remove('hidden');
+
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                uploadStatusText.textContent = `Đang tải lên (${i + 1}/${fileList.length}): ${file.name}...`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('userId', user.userId);
+
+                try {
+                    const res = await fetch(`${API_BASE}/api/upload`, {
+                        method: 'POST',
+                        headers: {
+                            'x-user-id': user.userId
+                        },
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || `Lỗi khi tải ${file.name}`);
+
+                    showToast(`Đã tải lên: ${file.name}`, 'success');
+                } catch (err) {
+                    showToast(err.message, 'error');
+                }
+            }
+
+            uploadStatusBox.classList.add('hidden');
+            fileInput.value = '';
+            fetchFiles();
+        }
+
+        window.deleteFile = async function (fileId) {
+            const user = getAuthUser();
+            if (!user) {
+                showToast('Vui lòng đăng nhập!', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/files/${fileId}?id=${fileId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user-id': user.userId
+                    },
+                    body: JSON.stringify({ id: fileId, userId: user.userId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Không thể xóa file');
+
+                showToast(data.message || 'Đã xóa file thành công!', 'success');
+                fetchFiles();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        };
+
+        // Sự kiện Drag & Drop Zone
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                uploadFiles(e.target.files);
+            }
+        });
+
+        ['dragenter', 'dragover'].forEach((evtName) => {
+            dropZone.addEventListener(evtName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach((evtName) => {
+            dropZone.addEventListener(evtName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const droppedFiles = e.dataTransfer.files;
+            if (droppedFiles && droppedFiles.length > 0) {
+                uploadFiles(droppedFiles);
+            }
+        });
+
+        refreshFilesBtn.addEventListener('click', () => {
+            fetchFiles();
+            showToast('Đã làm mới danh sách file.', 'info');
+        });
+
+        // ==================== SIDEBAR MOBILE & CHUYỂN ĐỔI MÀN HÌNH ĐƠN (SINGLE-VIEW) ====================
+        const topbarTitle = document.getElementById('topbarTitle');
+        const topbarSubtitle = document.getElementById('topbarSubtitle');
+        const toggleAutoApiBtn = document.getElementById('toggleAutoApiBtn');
+        const autoApiBox = document.getElementById('autoApiBox');
+
+        const VIEW_CONFIG = {
+            dashboard: {
+                panelId: 'overviewSection',
+                title: '📊 Tổng quan Dashboard',
+                subtitle: 'Thống kê nhanh & lối tắt hệ thống Thời Sự Của Sang'
+            },
+            weather: {
+                panelId: 'weatherSection',
+                title: '🌤️ Thời tiết trực tuyến',
+                subtitle: 'Số liệu nhiệt độ, độ ẩm, sức gió trực tiếp từ trạm khí tượng Open-Meteo'
+            },
+            news: {
+                panelId: 'newsSection',
+                title: '📰 Điểm tin & Báo chí',
+                subtitle: 'Đọc báo theo chuyên mục Thời sự, Tài chính, Chính trị & các đầu báo lớn'
+            },
+            upload: {
+                panelId: 'uploadSection',
+                title: '☁️ Tải tài liệu lên đám mây',
+                subtitle: 'Kéo & thả file để lưu trữ an toàn vào tài khoản cá nhân của bạn'
+            },
+            files: {
+                panelId: 'filesSection',
+                title: '📁 Kho file của tôi',
+                subtitle: 'Quản lý, xem hoặc xóa các tài liệu đã tải lên'
+            }
+        };
+
+        window.switchView = function (viewKey, customHeading = null, customSub = null) {
+            // Chuẩn hóa tên view nếu truyền vào dạng section id cũ
+            const mapKey = {
+                dashboard: 'dashboard',
+                overviewSection: 'dashboard',
+                weatherSection: 'weather',
+                weather: 'weather',
+                newsSection: 'news',
+                news: 'news',
+                uploadSection: 'upload',
+                upload: 'upload',
+                filesSection: 'files',
+                files: 'files'
+            }[viewKey] || 'dashboard';
+
+            const cfg = VIEW_CONFIG[mapKey];
+            if (!cfg) return;
+
+            // Ẩn toàn bộ các view-panel, chỉ hiển thị duy nhất panel đang chọn
+            document.querySelectorAll('.view-panel').forEach((panel) => {
+                panel.classList.toggle('hidden', panel.id !== cfg.panelId);
+            });
+
+            if (topbarTitle) topbarTitle.textContent = customHeading || cfg.title;
+            if (topbarSubtitle) topbarSubtitle.textContent = customSub || cfg.subtitle;
+
+            // Cuộn nhẹ lên đầu trang
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        if (toggleAutoApiBtn && autoApiBox) {
+            toggleAutoApiBtn.addEventListener('click', () => {
+                const isHidden = autoApiBox.classList.toggle('hidden');
+                toggleAutoApiBtn.textContent = isHidden ? '➕ Thêm báo mới bằng URL' : '✕ Đóng khung thêm báo';
+            });
+        }
+
+        function toggleSidebar(show) {
+            if (show) {
+                sidebar.classList.add('open');
+                sidebarOverlay.classList.add('show');
+            } else {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('show');
+            }
+        }
+
+        menuToggleBtn.addEventListener('click', () => toggleSidebar(true));
+        closeSidebarBtn.addEventListener('click', () => toggleSidebar(false));
+        sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
+
+        document.querySelectorAll('.nav-item').forEach((link) => {
+            link.addEventListener('click', (e) => {
+                if (link.id === 'sidebarInstallAppBtn') return;
+                e.preventDefault();
+
+                document.querySelectorAll('.nav-item').forEach((el) => el.classList.remove('active'));
+                link.classList.add('active');
+
+                const sectionTarget = link.dataset.section;
+                const jumpCategory = link.dataset.catJump;
+                const jumpSource = link.dataset.sourceJump;
+
+                if (sectionTarget) {
+                    switchView(sectionTarget);
+                } else if (jumpCategory) {
+                    switchView('news', `📰 Chuyên mục: ${CATEGORY_LABELS[jumpCategory]}`, 'Cập nhật tin nóng tự động từ các báo lớn');
+                    fetchNews(jumpCategory, currentNewsSource);
+                } else if (jumpSource) {
+                    const targetCat = jumpSource === 'cafef' && currentNewsCategory === 'chinh-tri' ? 'tai-chinh' : currentNewsCategory;
+                    switchView('news', `🗞️ Nguồn báo: ${SOURCE_LABELS[jumpSource] || 'Tất cả báo'}`, 'Đọc tin trực tiếp theo đầu báo đã chọn');
+                    fetchNews(targetCat, jumpSource);
+                }
+
+                if (window.innerWidth <= 900) {
+                    toggleSidebar(false);
+                }
+            });
+        });
+
+        // ==================== TẢI & CÀI ĐẶT APP ĐIỆN THOẠI (PWA + QR WI-FI) ====================
+        const installAppModal = document.getElementById('installAppModal');
+        const openInstallAppBtn = document.getElementById('openInstallAppBtn');
+        const sidebarInstallAppBtn = document.getElementById('sidebarInstallAppBtn');
+        const closeInstallModalBtn = document.getElementById('closeInstallModalBtn');
+        const triggerPwaInstallBtn = document.getElementById('triggerPwaInstallBtn');
+        const openInChromeIntentBtn = document.getElementById('openInChromeIntentBtn');
+        const mobileStepBanner = document.getElementById('mobileStepBanner');
+        const pwaInstallHint = document.getElementById('pwaInstallHint');
+        const mobileQrImage = document.getElementById('mobileQrImage');
+        const mobileLanUrlText = document.getElementById('mobileLanUrlText');
+        const copyLanUrlBtn = document.getElementById('copyLanUrlBtn');
+
+        let deferredInstallPrompt = null;
+        let latestHttpsUrl = null;
+        let latestLanUrl = null;
+        const ua = navigator.userAgent || '';
+        const isZaloOrInApp = /Zalo|FBAN|FBAV|Instagram|Line/i.test(ua);
+        const isAndroid = /Android/i.test(ua);
+        const isIOS = /iPhone|iPad|iPod/i.test(ua);
+        const isInsecureLan = window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+        // Đăng ký Service Worker cho PWA
+        if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch((err) => {
+                    console.warn('Service Worker:', err.message);
+                });
+            });
+        }
+
+        // Bắt sự kiện cài đặt PWA gốc của trình duyệt (Chrome / Edge)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            pwaInstallHint.textContent = '✅ Cổng HTTPS đã sẵn sàng! Nhấn nút màu xanh phía trên để Cài đặt App ngay!';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            showToast('🎉 Đã cài đặt App "Thời Sự Của Sang" thành công!', 'success');
+            installAppModal.classList.add('hidden');
+        });
+
+        async function loadMobileAppInfo() {
+            let targetUrl = window.location.origin;
+            try {
+                const res = await fetch(`${API_BASE}/api/app-info`);
+                if (res.ok) {
+                    const info = await res.json();
+                    latestHttpsUrl = info.httpsUrl || null;
+                    latestLanUrl = info.lanUrl || null;
+                    targetUrl = info.httpsUrl || info.lanUrl || targetUrl;
+                }
+            } catch (_) {
+                // Giữ nguyên origin hiện tại nếu lỗi
+            }
+            mobileLanUrlText.textContent = targetUrl;
+            mobileQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(targetUrl)}`;
+
+            // Nếu đang mở trên điện thoại bằng IP nội bộ (http://192.168...) và đã có cổng HTTPS
+            if (isInsecureLan && latestHttpsUrl) {
+                triggerPwaInstallBtn.innerHTML = '🔒 Chuyển sang cổng HTTPS để Cài đặt App 1 chạm';
+                pwaInstallHint.innerHTML = `💡 Bạn đang ở cổng HTTP nội bộ (<code>${escapeHtml(window.location.host)}</code>). Nhấn nút xanh ở trên để chuyển sang cổng <strong>HTTPS bảo mật</strong> — nút <strong>"Cài đặt"</strong> của Chrome sẽ mở khóa ngay!`;
+            }
+
+            // Cấu hình nút nhảy thẳng từ Zalo sang Google Chrome trên Android
+            if (isAndroid && openInChromeIntentBtn) {
+                const isHttps = targetUrl.startsWith('https://');
+                const scheme = isHttps ? 'https' : 'http';
+                const hostAndPort = targetUrl.replace(/^https?:\/\//i, '');
+                openInChromeIntentBtn.href = `intent://${hostAndPort}/#Intent;scheme=${scheme};package=com.android.chrome;end`;
+                if (isZaloOrInApp) {
+                    openInChromeIntentBtn.classList.remove('hidden');
+                }
+            }
+        }
+
+        function openInstallModal(e) {
+            if (e) e.preventDefault();
+            loadMobileAppInfo();
+            installAppModal.classList.remove('hidden');
+            if (window.innerWidth <= 900) {
+                toggleSidebar(false);
+            }
+        }
+
+        openInstallAppBtn.addEventListener('click', openInstallModal);
+        sidebarInstallAppBtn.addEventListener('click', openInstallModal);
+
+        closeInstallModalBtn.addEventListener('click', () => {
+            installAppModal.classList.add('hidden');
+        });
+
+        installAppModal.addEventListener('click', (e) => {
+            if (e.target === installAppModal) {
+                installAppModal.classList.add('hidden');
+            }
+        });
+
+        triggerPwaInstallBtn.addEventListener('click', async () => {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    showToast('Đang tiến hành cài đặt App Thời Sự Của Sang...', 'success');
+                }
+                deferredInstallPrompt = null;
+                return;
+            }
+
+            // Nếu người dùng đang ở địa chỉ http://192.168... trên điện thoại, tự động chuyển sang cổng HTTPS để mở khóa nút "Cài đặt"
+            if (isInsecureLan && latestHttpsUrl) {
+                showToast('🔒 Đang chuyển sang cổng bảo mật HTTPS để mở khóa cài đặt App...', 'info');
+                window.location.href = latestHttpsUrl;
+                return;
+            }
+
+            // Hiển thị chỉ dẫn trực quan ngay trên điện thoại (Zalo / Chrome / Safari)
+            mobileStepBanner.classList.remove('hidden');
+            if (isZaloOrInApp) {
+                mobileStepBanner.innerHTML = `
+                    <div class="step-pointer-title">⚠️ Bạn đang mở trong trình duyệt phụ của Zalo!</div>
+                    <p>Trình duyệt Zalo không cho phép tạo icon ra màn hình chính. Hãy làm 2 bước cực nhanh sau:</p>
+                    <ol>
+                        <li>Nhấn vào dấu <strong>⋮ (3 chấm ở góc trên cùng bên phải màn hình ↗️)</strong> rồi chọn <strong>"Mở bằng trình duyệt" (Chrome)</strong>.</li>
+                        <li>Khi sang Chrome, nhấn dấu <strong>⋮ (góc trên phải)</strong> → chọn <strong>"Cài đặt và tạo lối tắt" → "Cài đặt"</strong> là xong!</li>
+                    </ol>
+                `;
+                if (openInChromeIntentBtn) openInChromeIntentBtn.classList.remove('hidden');
+            } else if (isIOS) {
+                mobileStepBanner.innerHTML = `
+                    <div class="step-pointer-title">🍎 Cách thêm App ra màn hình chính iPhone:</div>
+                    <ol>
+                        <li>Nhấn biểu tượng <strong>Chia sẻ (Share ⬆️)</strong> ở thanh công cụ Safari.</li>
+                        <li>Chọn <strong>"Thêm vào MH chính" (Add to Home Screen ➕)</strong> → Nhấn <strong>Thêm</strong>.</li>
+                    </ol>
+                `;
+            } else {
+                mobileStepBanner.innerHTML = `
+                    <div class="step-pointer-title">📲 Nhấn 2 chạm để cài đặt App:</div>
+                    <ol>
+                        <li>Nhìn lên góc trên cùng bên phải trình duyệt Chrome, nhấn vào dấu <strong>⋮ (3 chấm) ↗️</strong></li>
+                        <li>Chọn <strong>"Cài đặt và tạo lối tắt"</strong> → Nhấn <strong>"Cài đặt"</strong> (hoặc <strong>"Tạo lối tắt"</strong>)!</li>
+                    </ol>
+                `;
+            }
+            mobileStepBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        copyLanUrlBtn.addEventListener('click', async () => {
+            const urlText = mobileLanUrlText.textContent;
+            try {
+                await navigator.clipboard.writeText(urlText);
+                showToast(`Đã sao chép địa chỉ: ${urlText}`, 'success');
+            } catch (_) {
+                showToast(`Địa chỉ: ${urlText}`, 'info');
+            }
+        });
+
+        // ==================== QUẢN LÝ & XÓA / THÊM TRANG BÁO TỰ ĐỘNG ====================
+        const addSourceForm = document.getElementById('addSourceForm');
+        const customSourceUrlInput = document.getElementById('customSourceUrlInput');
+        const customSourceNameInput = document.getElementById('customSourceNameInput');
+        const addSourceSubmitBtn = document.getElementById('addSourceSubmitBtn');
+        const discoveredApiBanner = document.getElementById('discoveredApiBanner');
+        const dynamicSourcePillsContainer = document.getElementById('dynamicSourcePillsContainer');
+        const sidebarSourcesList = document.getElementById('sidebarSourcesList');
+        const sidebarSourcesHeader = document.getElementById('sidebarSourcesHeader');
+        const sidebarAllSourcesText = document.getElementById('sidebarAllSourcesText');
+        const allSourcesPill = document.getElementById('allSourcesPill');
+        const restoreDefaultSourcesBtn = document.getElementById('restoreDefaultSourcesBtn');
+
+        async function loadCustomSources() {
+            try {
+                const res = await fetch(`${API_BASE}/api/sources`);
+                if (!res.ok) return;
+                const payload = await res.json();
+                const allSources = Array.isArray(payload) ? payload : payload.sources || [];
+                const disabledBuiltinCount = payload.disabledBuiltinCount || 0;
+
+                // Cập nhật số lượng báo trên thanh công cụ
+                const totalActive = allSources.length;
+                SOURCE_LABELS['all'] = `Tất cả (${totalActive} báo)`;
+                if (allSourcesPill) allSourcesPill.textContent = `Tất cả (${totalActive} báo)`;
+                if (sidebarSourcesHeader) sidebarSourcesHeader.textContent = `NGUỒN BÁO ĐIỆN TỬ (${totalActive} BÁO)`;
+                if (sidebarAllSourcesText) sidebarAllSourcesText.textContent = `Tất cả (${totalActive} trang báo)`;
+
+                // Hiển thị nút "Khôi phục báo gốc" nếu người dùng đã xóa bớt báo mặc định
+                if (restoreDefaultSourcesBtn) {
+                    restoreDefaultSourcesBtn.classList.toggle('hidden', disabledBuiltinCount === 0);
+                }
+
+                // Cập nhật tên hiển thị vào bảng SOURCE_LABELS
+                allSources.forEach((item) => {
+                    SOURCE_LABELS[item.sourceId] = item.name;
+                });
+
+                // Render tất cả các báo (mặc định + tự thêm) trên Thanh công cụ kèm nút ✕ để xóa
+                dynamicSourcePillsContainer.innerHTML = allSources
+                    .map((item) => {
+                        const deleteTarget = item.isBuiltin ? item.sourceId : item.id;
+                        return `
+                            <span class="custom-pill-group">
+                                <button type="button" class="source-pill ${currentNewsSource === item.sourceId ? 'active' : ''}" data-source="${escapeHtml(item.sourceId)}" onclick="fetchNews(currentNewsCategory, '${escapeHtml(item.sourceId)}')">
+                                    ${item.isBuiltin ? '' : '🌐 '}${escapeHtml(item.name)}
+                                </button>
+                                <button type="button" class="delete-source-btn" title="Xóa báo ${escapeHtml(item.name)} khỏi danh sách" onclick="removeNewspaperSource('${escapeHtml(String(deleteTarget))}', '${escapeHtml(item.sourceId)}', '${escapeHtml(item.name)}')">✕</button>
+                            </span>
+                        `;
+                    })
+                    .join('');
+
+                // Render mục chọn trên Thanh Menu Trái (Sidebar Navigation) kèm nút ✕ xóa nhanh
+                sidebarSourcesList.innerHTML = allSources
+                    .map((item) => {
+                        const deleteTarget = item.isBuiltin ? item.sourceId : item.id;
+                        return `
+                            <div class="sidebar-source-row">
+                                <a href="#newsSection" class="nav-item sidebar-source-link ${currentNewsSource === item.sourceId ? 'active' : ''}" onclick="selectCustomSidebarSource(event, '${escapeHtml(item.sourceId)}')">
+                                    <span class="source-dot ${escapeHtml(item.dotClass || 'dot-custom')}"></span>
+                                    <span>${escapeHtml(item.fullName || item.name)}</span>
+                                </a>
+                                <button type="button" class="sidebar-del-btn" title="Xóa báo ${escapeHtml(item.name)}" onclick="removeNewspaperSource('${escapeHtml(String(deleteTarget))}', '${escapeHtml(item.sourceId)}', '${escapeHtml(item.name)}')">✕</button>
+                            </div>
+                        `;
+                    })
+                    .join('');
+            } catch (err) {
+                console.warn('Lỗi tải danh sách nguồn báo:', err.message);
+            }
+        }
+
+        if (allSourcesPill) {
+            allSourcesPill.addEventListener('click', () => {
+                fetchNews(currentNewsCategory, 'all');
+            });
+        }
+
+        window.selectCustomSidebarSource = function (e, sourceId) {
+            if (e) e.preventDefault();
+            document.querySelectorAll('.nav-item').forEach((el) => el.classList.remove('active'));
+            if (e && e.currentTarget) e.currentTarget.classList.add('active');
+            const targetCat = sourceId === 'cafef' && currentNewsCategory === 'chinh-tri' ? 'tai-chinh' : currentNewsCategory;
+            const srcName = SOURCE_LABELS[sourceId] || sourceId;
+            switchView('news', `🗞️ Nguồn báo: ${srcName}`, 'Chỉ hiển thị các bản tin mới nhất từ đầu báo này');
+            fetchNews(targetCat, sourceId);
+            if (window.innerWidth <= 900) {
+                toggleSidebar(false);
+            }
+        };
+
+        async function addNewspaperByUrl(url, name = '') {
+            addSourceSubmitBtn.disabled = true;
+            addSourceSubmitBtn.textContent = '⏳ Đang dò API...';
+            discoveredApiBanner.classList.remove('hidden');
+            discoveredApiBanner.innerHTML = `🔍 Đang quét địa chỉ <strong>${escapeHtml(url)}</strong> để tự động tìm luồng API / RSS...`;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/sources`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, name })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Không thể lấy API từ địa chỉ này');
+
+                const src = data.source;
+                SOURCE_LABELS[src.sourceId] = src.name;
+
+                discoveredApiBanner.innerHTML = `
+                    ✅ <strong>Thành công!</strong> Đã tự động lấy API của <strong>${escapeHtml(src.name)}</strong>:
+                    <code>${escapeHtml(src.rssUrl)}</code>
+                    (${src.mode === 'rss' ? `Chuẩn RSS • ${src.sampleCount} tin` : `Trích xuất Web tự động • ${src.sampleCount} tin`})
+                `;
+
+                showToast(data.message || `Đã thêm báo ${src.name}!`, 'success');
+                customSourceUrlInput.value = '';
+                customSourceNameInput.value = '';
+
+                await loadCustomSources();
+                fetchNews('all', src.sourceId);
+            } catch (err) {
+                discoveredApiBanner.innerHTML = `❌ <strong>Lỗi:</strong> ${escapeHtml(err.message)}`;
+                showToast(err.message, 'error');
+            } finally {
+                addSourceSubmitBtn.disabled = false;
+                addSourceSubmitBtn.textContent = '⚡ Tự lấy API & Thêm';
+            }
+        }
+
+        addSourceForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const url = customSourceUrlInput.value.trim();
+            const name = customSourceNameInput.value.trim();
+            if (!url) return;
+            addNewspaperByUrl(url, name);
+        });
+
+        document.querySelectorAll('.chip-btn').forEach((chip) => {
+            chip.addEventListener('click', () => {
+                const url = chip.dataset.url;
+                const name = chip.dataset.name;
+                customSourceUrlInput.value = url;
+                customSourceNameInput.value = name;
+                addNewspaperByUrl(url, name);
+            });
+        });
+
+        window.removeNewspaperSource = async function (idOrSourceId, sourceId, sourceName) {
+            try {
+                const res = await fetch(`${API_BASE}/api/sources/${encodeURIComponent(idOrSourceId)}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Không thể xóa nguồn báo');
+
+                showToast(data.message || `Đã xóa báo ${sourceName}!`, 'info');
+                await loadCustomSources();
+                if (currentNewsSource === sourceId || currentNewsSource === 'all') {
+                    fetchNews(currentNewsCategory, 'all');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        };
+
+        window.restoreDefaultSources = async function () {
+            try {
+                const res = await fetch(`${API_BASE}/api/sources/restore-defaults`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Không thể khôi phục');
+                showToast(data.message || 'Đã khôi phục 6 báo gốc!', 'success');
+                await loadCustomSources();
+                fetchNews(currentNewsCategory, 'all');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        };
+
+        // ==================== KHỞI CHẠY ====================
+        window.addEventListener('DOMContentLoaded', async () => {
+            updateAuthUI();
+            await loadCustomSources();
+            fetchWeather();
+            fetchNews('thoi-su', 'all');
+            loadMobileAppInfo();
+        });
+    </script>
+</body>
+</html>
